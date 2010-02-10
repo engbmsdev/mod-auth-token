@@ -86,7 +86,7 @@ static const command_rec auth_token_cmds[] =
 	AP_INIT_TAKE1("AuthTokenTimeout", ap_set_int_slot,
 	 (void *)APR_OFFSETOF(auth_token_config_rec, timeout),
 	 ACCESS_CONF, "time to live for tokens"),
-	AP_INIT_FLAG("LimitByIp", ap_set_flag_slot,
+	AP_INIT_FLAG("AuthTokenLimitByIp", ap_set_flag_slot,
 	 (void *)APR_OFFSETOF(auth_token_config_rec, checkip), 
 	 ACCESS_CONF, "enable or disable ip checking"),
 	{NULL}
