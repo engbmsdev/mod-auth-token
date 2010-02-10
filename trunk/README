@@ -24,6 +24,7 @@ USAGE
   where the token is generated as 
 
     md5("secret" + "/path/to/file.txt" + dechex(time_now()))
+  you can add in the md5 hash the ip (and not the hostname) of the client to limit by ip. If you do so, enable AuthTokenLimitByIp in the config file of apache
 
   with the following configuration in httpd.conf
 
@@ -31,6 +32,7 @@ USAGE
       AuthTokenSecret       "secret"
       AuthTokenPrefix       /protected/
       AuthTokenTimeout      60
+	  AuthTokenLimitByIp	off
     </Location
 
   The actual file would be located in
