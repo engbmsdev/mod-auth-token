@@ -16,6 +16,7 @@
 
 /*
  * Written by Mikael Johansson <mikael AT synd DOT info>
+ * Some code by David Aves <david.alves AT gmx DOT fr>
  *
  * This module uses token based authentication to secure files and
  * prevent deep-linking.
@@ -42,6 +43,7 @@ typedef struct {
 	char *prefix;
 	unsigned int prefix_len;
 	int timeout;
+	int checkip;
 } auth_token_config_rec;
 
 static void *create_auth_token_dir_config(apr_pool_t *p, char *d)
@@ -52,7 +54,7 @@ static void *create_auth_token_dir_config(apr_pool_t *p, char *d)
 	conf->prefix = NULL;
 	conf->prefix_len = 0;
 	conf->timeout = 60;		/* 60 second timeout per default */
-
+    conf->checkip = 0;		/* Disabling IP check by default */ 
 	return conf;
 }
 
@@ -84,6 +86,9 @@ static const command_rec auth_token_cmds[] =
 	AP_INIT_TAKE1("AuthTokenTimeout", ap_set_int_slot,
 	 (void *)APR_OFFSETOF(auth_token_config_rec, timeout),
 	 ACCESS_CONF, "time to live for tokens"),
+	AP_INIT_FLAG("LimitByIp", ap_set_flag_slot,
+	 (void *)APR_OFFSETOF(auth_token_config_rec, checkip), 
+	 ACCESS_CONF, "enable or disable ip checking"),
 	{NULL}
 };
 
@@ -135,14 +140,27 @@ static void auth_token_bin2hex(char *result, const char *x, int len)
 
 static int authenticate_token(request_rec *r)
 {
-	const char *usertoken, *timestamp, *path;
+	const char *usertoken, *timestamp, *path, *remoteip;
 	unsigned char digest[APR_MD5_DIGESTSIZE];
 	char token[APR_MD5_DIGESTSIZE * 2];
 	auth_token_config_rec *conf;
 	apr_md5_ctx_t context;
 
-	/* check if the request uri is to be protected */
 	conf = ap_get_module_config(r->per_dir_config, &auth_token_module);
+	
+	/* Get the remote IP , forcing to get an IP instead DNS record*/
+	if (conf->checkip) {
+		remoteip = ap_get_remote_host(r->connection, NULL, REMOTE_NAME, NULL);
+    	if(NULL == remoteip)
+		{	
+			ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, "mod_auth_token: request from ip FAILED." );
+			return DECLINED;
+		}		
+		ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, "mod_auth_token: request from ip %s", remoteip );
+	}
+
+
+	/* check if the request uri is to be protected */
 	if (conf->prefix == NULL || strncmp(r->uri, conf->prefix, conf->prefix_len)) {
 		return DECLINED;
 	}
@@ -171,7 +189,8 @@ static int authenticate_token(request_rec *r)
 	apr_md5_update(&context, (unsigned char *) conf->secret, strlen(conf->secret));
 	apr_md5_update(&context, (unsigned char *) path, strlen(path));
 	apr_md5_update(&context, (unsigned char *) timestamp, 8);
-
+	if (conf->checkip)
+		apr_md5_update(&context, (unsigned char *) remoteip, strlen(remoteip));
 	apr_md5_final(digest, &context);
 
 	/* compare hex encoded token and user provided token */
