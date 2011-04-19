@@ -60,6 +60,9 @@ dnl Add test for a compiler.
 dnl AC_CHECK_COMPILERS
 AC_PROG_CC
 
+# needed libs
+PKG_CHECK_MODULES(APR, [apr-1 apr-util-1])
+
 CXXFLAGS=""
 if test x$debug = xtrue; then
    CXXDEBUGDEFINES="-D_DEBUG"
