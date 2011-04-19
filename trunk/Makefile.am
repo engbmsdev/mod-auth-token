@@ -9,4 +9,5 @@ mod_auth_token.so:
 
 ## Define install targets
 install: mod_auth_token.so
-	$(APXS) -i -a mod_auth_token.la
+	$(MKDIR_P) $(DESTDIR)$(APXS_LIBEXECDIR)
+	$(APXS) -i -S LIBEXECDIR=$(DESTDIR)$(APXS_LIBEXECDIR) -n mod_auth_token mod_auth_token.la
