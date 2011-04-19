@@ -5,7 +5,7 @@ AM_CFLAGS = $(CXXDEBUGDEFINES)
 noinst_SCRIPTS = mod_auth_token.so
 
 mod_auth_token.so:
-	$(APXS) $(APXS_CXX_OPTIONS) $(INCLUDES) -c mod_auth_token.c
+	$(APXS) $(APXS_CXX_OPTIONS) $(INCLUDES) $(APR_CFLAGS) $(APR_LIBS) -c mod_auth_token.c
 
 ## Define install targets
 install: mod_auth_token.so
