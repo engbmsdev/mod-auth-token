@@ -64,7 +64,7 @@ static const char *auth_token_set_prefix_slot(cmd_parms *cmd, void *config, cons
 	auth_token_config_rec *conf = (auth_token_config_rec*)config;
 
 	if (arg[len - 1] != '/') {
-		ap_set_string_slot(cmd, config, apr_pstrcat(cmd->pool, arg, '/'));
+		ap_set_string_slot(cmd, config, apr_pstrcat(cmd->pool, arg, "/", NULL));
 		conf->prefix_len = len + 1;
 	}
 	else {
